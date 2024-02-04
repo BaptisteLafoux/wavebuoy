@@ -7,17 +7,16 @@ from multiprocessing import Pool
 from phone import Phone 
 from cst import * 
 
-
+import time 
 if __name__=='__main__': 
     phones = [Phone(id) for id in ID_LUT]
-
-
-    phones[0].send_custom('config?')
     
-    with Pool(2) as p:
-        p.map(Phone.run_experiment, phones)
+    [phone.run_experiment(5) for phone in phones]
 
-    plt.pause(4) 
+    # plt.pause(1) 
+    # times = phones[1].send_custom('time?=full')
+    # print(times) 
+
     # phones[0].send_custom('control?cmd=start')
 
     
