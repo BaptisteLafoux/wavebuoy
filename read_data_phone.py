@@ -10,15 +10,18 @@ from cst import *
 import time 
 if __name__=='__main__': 
     phones = [Phone(id) for id in ID_LUT]
-    
+    [phone.unlock() for phone in phones]
     [phone.launch_phyphox() for phone in phones]
-    # [phone.run_experiment(5) for phone in phones]
-
-    plt.pause(1) 
-    times = phones[1].send_custom('time?=full')
-    print(times) 
+    [phone.run_experiment(5) for phone in phones]
+    
+    # with Pool(2) as p:
+    #     p.map(Phone.run_experiment, phones)
 
     print(phones[0].is_connected)
+    
+    fig, ax = plt.subplots()
+    ax.plot()
+    plt.show()
 
     # phones[0].send_custom('control?cmd=start')
 

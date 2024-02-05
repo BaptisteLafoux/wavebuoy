@@ -4,7 +4,7 @@ import pprint; pp = pprint.PrettyPrinter(indent=2)
 import time 
 import subprocess
 import os 
-from subprocess import DEVNULL, STDOUT, call
+from subprocess import DEVNULL, STDOUT
 
 class Phone():
 
@@ -12,20 +12,37 @@ class Phone():
         self.id = id
         self.ip = f'{IP_BASE}.{id}'
         self.url = f'http://{self.ip}:{PHYPHOX_PORT}'
+        
+        print(f'[#{self.id}] Initializing... Connected: {self.is_connected}')
 
     @property
     def is_connected(self):
-        ret = call(['ping', self.ip, '-n', '1'], stdout=DEVNULL, stderr=STDOUT)
+        ret = subprocess.run(['ping', self.ip, '-n', '1'], text=False, capture_output=False, stdout=DEVNULL, stderr=DEVNULL)
         return ret != 0
 
-
     def launch_phyphox(self):
-        call(['adb', '-s', f'{self.ip}:{ADB_PORT}', 'shell', 'monkey', '-p', 'de.rwth_aachen.phyphox', '-c', 'android.intent.category.LAUNCHER', '1'], stdout=DEVNULL, stderr=STDOUT)
+        subprocess.run(['adb', '-s', f'{self.ip}:{ADB_PORT}', 'shell', 'monkey', '-p', 'de.rwth_aachen.phyphox', '-c', 'android.intent.category.LAUNCHER', '1'], text=False, capture_output=False, stdout=DEVNULL, stderr=DEVNULL)
 
     def get_start_time(self):
         self.start_time = self.send_custom('time?=full')[0]['systemTime']
+        
+    def unlock(self):
+        print('Unlocking phone')
+        subprocess.run(['bash', f'{BASH_SCRIPTS_PATH}/unlock.sh', f'{self.ip}:{ADB_PORT}'])
+        time.sleep(3)
 
-    def clear(self):
+        
+    def activate_timedRun(self, t_before: int=1, t_run: int=100):
+        print(f'Activating timed run with :\n\t- Delay before start:\t{t_before} s\n\t- Experiment duration:\t{t_run} s')
+        subprocess.run(['bash', f'{BASH_SCRIPTS_PATH}/activate_timedRun.sh', f'{self.ip}:{ADB_PORT}', f'{t_before}', f'{t_run}'])
+        time.sleep(10)
+
+    def connect(self): 
+        print(f'>> [#{self.id}] Initializing connexion...')
+        ret = subprocess.run(['adb', 'connect', f'{self.ip}:{ADB_PORT}'], text=False, capture_output=False, stdout=DEVNULL, stderr=DEVNULL)
+        if ret!=0: print('Connexon successful ! ')
+        
+    def clear_buffers(self):
         with requests.get(f'{self.url}/control?cmd=clear') as response:
             print(f'\t\t[#{self.id}] >>  Clearing phone buffers')
             return response.json()
@@ -39,7 +56,7 @@ class Phone():
             print(f'\t\t[#{self.id}] >>  Stopping acquisition')
 
     def send_custom(self, request: str, show_response: bool=False):
-        """Sends a customized requests to a phone. 
+        """Sends a customized request to a phone. 
 
         Args:
             - request (str): the text of the request 
@@ -53,19 +70,18 @@ class Phone():
 
             return(response.json())
         
+    
+        
     def run_experiment(self, acq_time):
-
-        print(f"[#{self.id}] >> Starting experiment")
+        
+        print(f"###########################\n[#{self.id}] >> Starting experiment\n")
         # exp = Experiment()
-        self.clear() 
+        
+        time.sleep(1)
+        self.clear_buffers() 
         self.start()
 
         time.sleep(1)
-        self.get_start_time()
-        print(f"[#{self.id}] >> Exp started @{time.strftime('%H:%M:%S', time.gmtime(self.start_time))}")
-
-        while time.time() - self.start_time < acq_time:
-            print(f'\t\t\tRemaining: {abs(time.time() - self.start_time - acq_time):.2f} s')
 
         self.stop()
 
