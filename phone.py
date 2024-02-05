@@ -2,6 +2,9 @@ from cst import *
 import requests
 import pprint; pp = pprint.PrettyPrinter(indent=2)
 import time 
+import subprocess
+import os 
+from subprocess import DEVNULL, STDOUT, call
 
 class Phone():
 
@@ -10,8 +13,16 @@ class Phone():
         self.ip = f'{IP_BASE}.{id}'
         self.url = f'http://{self.ip}:{PHYPHOX_PORT}'
 
+    @property
+    def is_connected(self):
+        ret = call(['ping', self.ip, '-n', '1'], stdout=DEVNULL, stderr=STDOUT)
+        return ret != 0
+
+
+    def launch_phyphox(self):
+        call(['adb', '-s', f'{self.ip}:{ADB_PORT}', 'shell', 'monkey', '-p', 'de.rwth_aachen.phyphox', '-c', 'android.intent.category.LAUNCHER', '1'], stdout=DEVNULL, stderr=STDOUT)
+
     def get_start_time(self):
-        time.sleep(0.5)
         self.start_time = self.send_custom('time?=full')[0]['systemTime']
 
     def clear(self):
@@ -25,7 +36,7 @@ class Phone():
 
     def stop(self):
         with requests.get(f'{self.url}/control?cmd=stop'):
-            print(f'\t\t[#{self.id}] >>  Stoppig acquisition')
+            print(f'\t\t[#{self.id}] >>  Stopping acquisition')
 
     def send_custom(self, request: str, show_response: bool=False):
         """Sends a customized requests to a phone. 
@@ -44,14 +55,17 @@ class Phone():
         
     def run_experiment(self, acq_time):
 
+        print(f"[#{self.id}] >> Starting experiment")
         # exp = Experiment()
         self.clear() 
         self.start()
 
+        time.sleep(1)
         self.get_start_time()
+        print(f"[#{self.id}] >> Exp started @{time.strftime('%H:%M:%S', time.gmtime(self.start_time))}")
 
         while time.time() - self.start_time < acq_time:
-            pass
+            print(f'\t\t\tRemaining: {abs(time.time() - self.start_time - acq_time):.2f} s')
 
         self.stop()
 

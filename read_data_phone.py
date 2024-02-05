@@ -11,11 +11,14 @@ import time
 if __name__=='__main__': 
     phones = [Phone(id) for id in ID_LUT]
     
-    [phone.run_experiment(5) for phone in phones]
+    [phone.launch_phyphox() for phone in phones]
+    # [phone.run_experiment(5) for phone in phones]
 
-    # plt.pause(1) 
-    # times = phones[1].send_custom('time?=full')
-    # print(times) 
+    plt.pause(1) 
+    times = phones[1].send_custom('time?=full')
+    print(times) 
+
+    print(phones[0].is_connected)
 
     # phones[0].send_custom('control?cmd=start')
 
