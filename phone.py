@@ -1,15 +1,16 @@
-from cst import *
-import requests
 import pprint
 
+import requests
+
+from cst import ADB_PORT, BASH_SCRIPTS_PATH, IP_BASE, PHYPHOX_PORT
+
 pp = pprint.PrettyPrinter(indent=2)
-import time
 import subprocess
+import time
 from subprocess import DEVNULL
 
 
 class Phone:
-
     def __init__(self, id) -> None:
         self.id = id
 
@@ -54,9 +55,7 @@ class Phone:
 
     def unlock(self):
         print("Unlocking phone")
-        subprocess.run(
-            ["bash", f"{BASH_SCRIPTS_PATH}/unlock.sh", f"{self.ip}:{ADB_PORT}"]
-        )
+        subprocess.run(["bash", f"{BASH_SCRIPTS_PATH}/unlock.sh", f"{self.ip}:{ADB_PORT}"])
         time.sleep(3)
 
     def activate_timedRun(self, t_before: int = 1, t_run: int = 100):
@@ -115,7 +114,6 @@ class Phone:
             return response.json()
 
     def run_experiment(self, acq_time):
-
         print(f"###########################\n[#{self.id}] >> Starting experiment\n")
         # exp = Experiment()
 
