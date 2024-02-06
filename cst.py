@@ -1,5 +1,5 @@
-IP_BASE = '192.168.7'
+IP_BASE = "192.168.7"
 ID_LUT = [102]
 PHYPHOX_PORT = 8080
 ADB_PORT = 5500
-BASH_SCRIPTS_PATH = 'bash_scripts'
+BASH_SCRIPTS_PATH = "bash_scripts"
