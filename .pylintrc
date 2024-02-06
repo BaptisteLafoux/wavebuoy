@@ -1,1 +1,3 @@
-max-line-length-=120
+[MAIN]
+
+max-line-length=120
