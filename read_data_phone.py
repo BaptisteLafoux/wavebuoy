@@ -1,6 +1,3 @@
-import requests
-
-
 import matplotlib.pyplot as plt 
 from multiprocessing import Pool
 
@@ -10,15 +7,13 @@ from cst import *
 import time 
 if __name__=='__main__': 
     phones = [Phone(id) for id in ID_LUT]
-    [phone.unlock() for phone in phones]
-    [phone.launch_phyphox() for phone in phones]
-    [phone.run_experiment(5) for phone in phones]
+    # [phone.unlock() for phone in phones]
+    # [phone.launch_phyphox() for phone in phones]
+    [phone.run_experiment(300) for phone in phones]
     
     # with Pool(2) as p:
     #     p.map(Phone.run_experiment, phones)
 
-    print(phones[0].is_connected)
-    
     fig, ax = plt.subplots()
     ax.plot()
     plt.show()

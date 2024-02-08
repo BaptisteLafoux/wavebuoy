@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 1: IP adress with opened port 5500 
+# 1: IP adress with opened port 5500, or phone identifier (from 'adb devices')
 # 2: time befort starting experiments (in seconds)
 # 3: duration of experiments (in seconds)
 
