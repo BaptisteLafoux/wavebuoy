@@ -6,49 +6,50 @@ from cst import ADB_PORT, BASH_SCRIPTS_PATH, IP_BASE, PHYPHOX_PORT, DUMP
 
 pp = pprint.PrettyPrinter(indent=2)
 import subprocess
-import os 
+import os
 from subprocess import DEVNULL, STDOUT
-import pandas as pd 
-import numpy as np 
-from datetime import datetime as dt 
-import re 
-import time 
+import pandas as pd
+import numpy as np
+from datetime import datetime as dt
+import re
+import time
 
-class Phone():
+
+class Phone:
     def __init__(self, id) -> None:
         self.id = id
-        self.ip = f'{IP_BASE}.{id}'
-        self.url = f'http://{self.ip}:{PHYPHOX_PORT}'
-        
-        print(f'[#{self.id}] Initializing... Available on network: {self.is_available}')
+        self.ip = f"{IP_BASE}.{id}"
+        self.url = f"http://{self.ip}:{PHYPHOX_PORT}"
+
+        print(f"[#{self.id}] Initializing... Available on network: {self.is_available}")
 
     @property
     def is_available(self):
-        try: 
-            self.send_custom('config?', show_response=False, get_response=False)
-            print('Connexion with phone working')
+        try:
+            self.send_custom("config?", show_response=False, get_response=False)
+            print("Connexion with phone working")
             return True
         except:
-            print('Phone not connected')
-            return False 
-    
+            print("Phone not connected")
+            return False
+
     @property
     def is_running(self):
-        req = self.send_custom('get?')['status']
-        is_running =  req['measuring']
-        if is_running: 
-            if req['timedRun']:
+        req = self.send_custom("get?")["status"]
+        is_running = req["measuring"]
+        if is_running:
+            if req["timedRun"]:
                 print(f"Timed run -\t Remaining : {req['countDown']/1000:.2f} s")
             else:
-                print('Running in non-stop mode...')
-        else: 
-            print('Acquisition stopped')
+                print("Running in non-stop mode...")
+        else:
+            print("Acquisition stopped")
         return is_running
-    
+
     @property
     def start_time(self):
-        return self.send_custom('time?=full')[0]['systemTime']
-    
+        return self.send_custom("time?=full")[0]["systemTime"]
+
     def launch_phyphox(self):
         subprocess.run(
             [
@@ -74,7 +75,9 @@ class Phone():
 
     def unlock(self):
         print("Unlocking phone")
-        subprocess.run(["bash", f"{BASH_SCRIPTS_PATH}/unlock.sh", f"{self.ip}:{ADB_PORT}"])
+        subprocess.run(
+            ["bash", f"{BASH_SCRIPTS_PATH}/unlock.sh", f"{self.ip}:{ADB_PORT}"]
+        )
         time.sleep(3)
 
     def activate_timedRun(self, t_before: int = 1, t_run: int = 100):
@@ -111,8 +114,8 @@ class Phone():
             print("Connexon successful ! ")
 
     def clear_buffers(self):
-        with requests.get(f'{self.url}/control?cmd=clear'):
-            print(f'\t\t[#{self.id}] >>  Clearing phone buffers')
+        with requests.get(f"{self.url}/control?cmd=clear"):
+            print(f"\t\t[#{self.id}] >>  Clearing phone buffers")
 
     def start(self):
         with requests.get(f"{self.url}/control?cmd=start"):
@@ -122,11 +125,13 @@ class Phone():
         with requests.get(f"{self.url}/control?cmd=stop"):
             print(f"\t\t[#{self.id}] >>  Stopping acquisition")
 
-    def send_custom(self, request: str, show_response: bool=False, get_response: bool=True):
-        """Sends a customized request to a phone. 
+    def send_custom(
+        self, request: str, show_response: bool = False, get_response: bool = True
+    ):
+        """Sends a customized request to a phone.
 
         Args:
-            - request (str): the text of the request 
+            - request (str): the text of the request
             - show_response (bool, optional): Show in terminal the response obtained to the request. Defaults to False.
         """
         with requests.get(f"{self.url}/{request}") as response:
@@ -135,39 +140,58 @@ class Phone():
                 print("Got response: ")
                 pp.pprint(response.json())
 
-            if get_response: return response.json()
+            if get_response:
+                return response.json()
 
-    def dump(self, vars=['acc']):
-        dims = ['X', 'Y', 'Z', '_time']
+    def dump(self, vars=["acc"], t=0):
         str_date = time.strftime("%d-%m-%Y>%H:%M:%S", time.gmtime(self.start_time))
-        os.makedirs(os.path.join(DUMP, str_date)) 
+        dims = ["X", "Y", "Z", "_time"]
 
-        for var in vars: 
-            dimD_vars = [f'{var}{dim}' for dim in dims]
-            cmd = '&&'.join([f'{dimD_var}=full' for dimD_var in dimD_vars])
-            raw_container = self.send_custom(f'get?{cmd}')
+        for var in vars:
+            dimD_vars = [f"{var}{dim}" for dim in dims]
+            cmd = "&&".join([f"{dimD_var}={t}|{var}_time" for dimD_var in dimD_vars])
+            raw_container = self.send_custom(f"get?{cmd}")
 
-            data_array = np.array([raw_container['buffer'][dimD_var]['buffer'] for dimD_var in dimD_vars]).T
-        
+            data_array = np.array(
+                [raw_container["buffer"][dimD_var]["buffer"] for dimD_var in dimD_vars]
+            ).T
+
             df = pd.DataFrame(data_array, columns=dimD_vars)
 
-            df[f'{var}_time_abs'] = [dt.fromtimestamp(t + self.start_time) for t in df[f'{var}_time']]
+            df[f"{var}_time_abs"] = [
+                dt.fromtimestamp(t + self.start_time) for t in df[f"{var}_time"]
+            ]
 
-            df.to_csv(os.path.join(DUMP, str_date, f'{str_date}_{var}.csv'))
-    
-        
+            df.to_csv(os.path.join(DUMP, str_date, f"{str_date}_{var}_t={t:.2f}s.csv"))
+
+    def start_datalog(self, var):
+
+        self.stop()
+        self.clear_buffers()
+        self.start()
+
+        time.sleep(1)
+
+        str_date = time.strftime("%d-%m-%Y>%H:%M:%S", time.gmtime(self.start_time))
+        os.makedirs(os.path.join(DUMP, str_date))
+        while self.is_running:
+            current_time = self.send_custom(f"get?{var}_time")["buffer"][f"{var}_time"][
+                "buffer"
+            ][0]
+            self.dump(vars=[var], t=current_time - 1)
+
     def run_experiment(self, t_run):
 
         self.unlock()
         self.activate_timedRun(t_run=t_run)
-        
+
         print(f"###########################\n[#{self.id}] >> Starting experiment\n")
         # exp = Experiment()
-        
-        self.clear_buffers() 
+
+        self.clear_buffers()
         self.start()
         time.sleep(2)
         while self.is_running:
             pass
-        
-        self.dump(vars=['acc', 'mag'])
+
+        self.datalog("acc")
