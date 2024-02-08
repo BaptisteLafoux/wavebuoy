@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import matplotlib.pyplot as plt 
 from multiprocessing import Pool
 
@@ -14,13 +15,30 @@ if __name__=='__main__':
     # with Pool(2) as p:
     #     p.map(Phone.run_experiment, phones)
 
+=======
+import matplotlib.pyplot as plt
+
+from cst import ID_LUT
+from phone import Phone
+
+if __name__ == "__main__":
+    phones = [Phone(id) for id in ID_LUT]
+    [phone.unlock() for phone in phones]
+    [phone.launch_phyphox() for phone in phones]
+    [phone.run_experiment(5) for phone in phones]
+
+    # with Pool(2) as p:
+    #     p.map(Phone.run_experiment, phones)
+
+    print(phones[0].is_connected)
+
+>>>>>>> e68115b14a84ab47abc8b02015a1cb59cd260f0c
     fig, ax = plt.subplots()
     ax.plot()
     plt.show()
 
     # phones[0].send_custom('control?cmd=start')
 
-    
     # phone.send_custom('/control?cmd=set&status=timedRun&value=False')
     # [phone.send_custom('start?') for phone in phones]
     # [phone.clear() for phone in phones]
@@ -29,7 +47,7 @@ if __name__=='__main__':
     # times = [phone.send_custom('time?=full') for phone in phones]
 
     # times[0]
-    
+
     # var = 'accX'
 
     # url = f'{phone.url}/get?cmd=set&status=timedRun&value=False'#/get?{var}=5|acc_time'
@@ -38,7 +56,7 @@ if __name__=='__main__':
 
     # data = f.json()['buffer'][var]['buffer']
 
-    # fig, ax =plt.subplots() 
+    # fig, ax =plt.subplots()
 
     # ax.plot(data, 'o')
     # plt.show()

@@ -1,0 +1,17 @@
+{
+    // see full current file full path in window header
+    "window.title": "${dirty}${activeEditorMedium}${separator}${rootName}${separator}${appName}",
+    // params for autodocstring extension
+    "autoDocstring.docstringFormat": "numpy",
+    "autoDocstring.startOnNewLine": true,
+    // show a vertical line in editor to materialize max line length at 120 characters
+    "editor.rulers": [
+        120
+    ],
+    // params for extension mananing python files auto-formatting
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+    },
+}

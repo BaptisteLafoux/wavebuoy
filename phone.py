@@ -1,7 +1,10 @@
-from cst import *
+import pprint
+
 import requests
-import pprint; pp = pprint.PrettyPrinter(indent=2)
-import time 
+
+from cst import ADB_PORT, BASH_SCRIPTS_PATH, IP_BASE, PHYPHOX_PORT, DUMP
+
+pp = pprint.PrettyPrinter(indent=2)
 import subprocess
 import os 
 from subprocess import DEVNULL, STDOUT
@@ -9,6 +12,7 @@ import pandas as pd
 import numpy as np 
 from datetime import datetime as dt 
 import re 
+import time 
 
 class Phone():
     def __init__(self, id) -> None:
@@ -20,11 +24,6 @@ class Phone():
 
     @property
     def is_available(self):
-        """WRONG !! 
-
-        Returns:
-            _type_: _description_
-        """
         try: 
             self.send_custom('config?', show_response=False, get_response=False)
             print('Connexion with phone working')
@@ -51,39 +50,77 @@ class Phone():
         return self.send_custom('time?=full')[0]['systemTime']
     
     def launch_phyphox(self):
-        subprocess.run(['adb', '-s', f'{self.ip}:{ADB_PORT}', 'shell', 'monkey', '-p', 'de.rwth_aachen.phyphox', '-c', 'android.intent.category.LAUNCHER', '1'], text=False, capture_output=False, stdout=DEVNULL, stderr=DEVNULL)
-        
+        subprocess.run(
+            [
+                "adb",
+                "-s",
+                f"{self.ip}:{ADB_PORT}",
+                "shell",
+                "monkey",
+                "-p",
+                "de.rwth_aachen.phyphox",
+                "-c",
+                "android.intent.category.LAUNCHER",
+                "1",
+            ],
+            text=False,
+            capture_output=False,
+            stdout=DEVNULL,
+            stderr=DEVNULL,
+        )
+
+    def get_start_time(self):
+        self.start_time = self.send_custom("time?=full")[0]["systemTime"]
+
     def unlock(self):
-        print('Unlocking phone')
-        subprocess.run(['bash', f'{BASH_SCRIPTS_PATH}/unlock.sh', f'{self.ip}:{ADB_PORT}'])
+        print("Unlocking phone")
+        subprocess.run(["bash", f"{BASH_SCRIPTS_PATH}/unlock.sh", f"{self.ip}:{ADB_PORT}"])
         time.sleep(3)
 
-    def activate_timedRun(self, t_before: int=1, t_run: int=100):
+    def activate_timedRun(self, t_before: int = 1, t_run: int = 100):
         """Runs a bash file to does action on the phoe to activate the Timed Run optio (Fixed Experiment duration)
 
         Args:
             - t_before (int, optional): Delay before the start of an experiment, in seconds. Defaults to 1.
             - t_run (int, optional): Experiment duration, in seconds. Defaults to 100.
         """
-        print(f'Activating timed run with :\n\t- Delay before start:\t{t_before} s\n\t- Experiment duration:\t{t_run} s')
-        resp = subprocess.run(['bash', f'{BASH_SCRIPTS_PATH}/activate_timedRun.sh', f'{self.ip}:{ADB_PORT}', f'{t_before}', f'{t_run}'])
+        print(
+            f"Activating timed run with :\n\t- Delay before start:\t{t_before} s\n\t- Experiment duration:\t{t_run} s"
+        )
+        subprocess.run(
+            [
+                "bash",
+                f"{BASH_SCRIPTS_PATH}/activate_timedRun.sh",
+                f"{self.ip}:{ADB_PORT}",
+                f"{t_before}",
+                f"{t_run}",
+            ]
+        )
+        time.sleep(10)
 
-    def connect(self): 
-        print(f'>> [#{self.id}] Initializing connexion...')
-        ret = subprocess.run(['adb', 'connect', f'{self.ip}:{ADB_PORT}'], text=False, capture_output=False, stdout=DEVNULL, stderr=DEVNULL)
-        if ret!=0: print('Connexon successful ! ')
-        
+    def connect(self):
+        print(f">> [#{self.id}] Initializing connexion...")
+        ret = subprocess.run(
+            ["adb", "connect", f"{self.ip}:{ADB_PORT}"],
+            text=False,
+            capture_output=False,
+            stdout=DEVNULL,
+            stderr=DEVNULL,
+        )
+        if ret != 0:
+            print("Connexon successful ! ")
+
     def clear_buffers(self):
         with requests.get(f'{self.url}/control?cmd=clear'):
             print(f'\t\t[#{self.id}] >>  Clearing phone buffers')
 
     def start(self):
-        with requests.get(f'{self.url}/control?cmd=start'):
-            print(f'\t\t[#{self.id}] >>  Starting acquisition')
+        with requests.get(f"{self.url}/control?cmd=start"):
+            print(f"\t\t[#{self.id}] >>  Starting acquisition")
 
     def stop(self):
-        with requests.get(f'{self.url}/control?cmd=stop'):
-            print(f'\t\t[#{self.id}] >>  Stopping acquisition')
+        with requests.get(f"{self.url}/control?cmd=stop"):
+            print(f"\t\t[#{self.id}] >>  Stopping acquisition")
 
     def send_custom(self, request: str, show_response: bool=False, get_response: bool=True):
         """Sends a customized request to a phone. 
@@ -92,10 +129,10 @@ class Phone():
             - request (str): the text of the request 
             - show_response (bool, optional): Show in terminal the response obtained to the request. Defaults to False.
         """
-        with requests.get(f'{self.url}/{request}') as response:
-            if show_response:  
+        with requests.get(f"{self.url}/{request}") as response:
+            if show_response:
                 print(f'\t\t[#{self.id}] >>  Sending: "{request}"')
-                print('Got response: ')
+                print("Got response: ")
                 pp.pprint(response.json())
 
             if get_response: return response.json()

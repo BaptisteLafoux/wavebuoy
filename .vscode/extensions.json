@@ -1,0 +1,11 @@
+{
+    // list of recommended vscode extensions for this repo
+    "recommendations": [
+        // python files formatting
+        "ms-python.black-formatter",
+        // extension to remove unused imports
+        "mikoz.autoflake-extension",
+        // python docstring generation
+        "njpwerner.autodocstring",
+    ],
+}
