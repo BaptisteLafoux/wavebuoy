@@ -1,6 +1,6 @@
-IP_BASE = '192.168.158'
-ID_LUT = [107]
+IP_BASE = "192.168"
+ID_LUT = ["224.233", "224.9"]
 PHYPHOX_PORT = 8080
 ADB_PORT = 5500
-BASH_SCRIPTS_PATH = 'bash_scripts'
-DUMP = 'dump'
+BASH_SCRIPTS_PATH = "bash_scripts"
+DUMP = "dump"

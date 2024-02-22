@@ -16,15 +16,16 @@ import time
 
 
 class Phone:
-    def __init__(self, id) -> None:
+    def __init__(self, id=None) -> None:
+        self.serial = 0  # TO COMPLETE
         self.id = id
         self.ip = f"{IP_BASE}.{id}"
         self.url = f"http://{self.ip}:{PHYPHOX_PORT}"
 
-        print(f"[#{self.id}] Initializing... Available on network: {self.is_available}")
+        print(f"[#{self.id}] Initializing...  Connected via ADB : {self.is_connected}")
 
     @property
-    def is_available(self):
+    def is_connected(self):
         try:
             self.send_custom("config?", show_response=False, get_response=False)
             print("Connexion with phone working")
@@ -81,7 +82,7 @@ class Phone:
         time.sleep(3)
 
     def activate_timedRun(self, t_before: int = 1, t_run: int = 100):
-        """Runs a bash file to does action on the phoe to activate the Timed Run optio (Fixed Experiment duration)
+        """Runs a bash file to do actions on the phone to activate the Timed Run optio (Fixed Experiment duration)
 
         Args:
             - t_before (int, optional): Delay before the start of an experiment, in seconds. Defaults to 1.
